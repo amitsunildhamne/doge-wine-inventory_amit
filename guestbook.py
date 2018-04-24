@@ -50,7 +50,9 @@ class Wine(ndb.Model):
     winery = ndb.StringProperty(indexed=True)
     year = ndb.StringProperty(indexed=True)
     price = ndb.FloatProperty(indexed=True)
-    date = ndb.DateTimeProperty(auto_now_add=True)
+    date = ndb.DateProperty(auto_now_add=True)
+    time = ndb.TimeProperty(auto_now_add=True)
+
 # [END wine info]
 class Wine_Items(ndb.Model):
     wine = ndb.StructuredProperty(Wine)
@@ -62,6 +64,16 @@ class Cart(ndb.Model):
     date = ndb.DateProperty(auto_now_add=True)
     time = ndb.TimeProperty(auto_now_add=True)
 # [START main_page]
+
+class Bid(ndb.model):
+    highest_bidder = ndb.StructuredProperty(Author)
+    wine_items = ndb.StructuredProperty(Wine_Items, indexed=True)
+    time_started = ndb.TimeProperty(auto_now_add=True)
+    date_started = ndb.DateProperty(auto_now_add=True)
+    date_end = ndb.DateProperty(auto_now_add=True)
+    time_end = ndb.TimeProperty(auto_now_add=True)
+    bid_price = ndb.FloatProperty(auto_now_add=True)
+    quantity = ndb.IntegerProperty(auto_now_add=True)
 
 class MainPage(webapp2.RequestHandler): #displays main page
     def get(self):
