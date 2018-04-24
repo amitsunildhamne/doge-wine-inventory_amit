@@ -74,6 +74,7 @@ class Bid(ndb.model):
     time_end = ndb.TimeProperty(auto_now_add=True)
     bid_price = ndb.FloatProperty(auto_now_add=True)
     quantity = ndb.IntegerProperty(auto_now_add=True)
+    quantity_available = ndb.IntegerProperty(auto_now_add=True)
 
 class MainPage(webapp2.RequestHandler): #displays main page
     def get(self):
