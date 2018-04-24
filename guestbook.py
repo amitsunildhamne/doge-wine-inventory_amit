@@ -37,6 +37,9 @@ def cart_key(cart_name=DEFAULT_CART_NAME):
 def purchase_key(cart_name):
     return ndb.Key('Purchasebook', cart_name)
 
+def bid_key(cart_name):
+    return ndb.Key('Bidbook',cart_name)
+
 # [START wine info]
 class Author(ndb.Model):
     identity = ndb.StringProperty(indexed=False)
