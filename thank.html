@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <link type = "text/css" rel="stylesheet" href="/stylesheets/main.css">
+    <link type = "text/css" rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link type="text/css" rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.css">
+    <style>
+      body{
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #dddddd;
+        font-family: Verdana,Helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <center>
+      <br>
+      <font size="+2" color="0000CC"> Receipt of Purchase</font>
+      <br>
+      <br>
+    </center>
+    <hr>
+    <b>Email id: <i>{{ user.email() }}</i></b>
+    <br>
+    <br>
+    {% for cart in carts %}
+    <p align="left"> {{ cart.wine_items.wine.winery }}  {{ cart.wine_items.wine.variety }} {{ cart.wine_items.wine.year }} {{ cart.wine_items.wine.region }} {{ cart.wine_items.wine.country }} ${{ cart.wine_items.wine.price }} Quantity:{{ cart.wine_items.quantity }}</p>
+    {% endfor %}
+    <br>
+    <br>
+    <p align="left">Your total cost is $<i>{{ total_cost }}</i></p>
+    <p align="left">Time of Purchase: <i>{{ time }}</i></p>
+    <p align="left">Date of Purchase: <i>{{ date }}</i></p>
+    <br>
+    <br>
+    <center>
+      <p><font size="6">THANK YOU!</font></p>
+    </center>
+    <div align="left"><a href="."> Return to main page </a><div>
+  </body>
+</html>
+{% endautoescape %}

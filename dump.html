@@ -1,0 +1,16 @@
+<!-- [START greetings] -->
+{% for greeting in greetings %}
+<div class="row">
+  {% if greeting.author %}
+    <b>{{ greeting.author.email }}
+      {% if user and user.user_id() == greeting.author.identity %}
+        (You)
+      {% endif %}
+    </b> wrote:
+  {% else %}
+    An anonymous person wrote:
+  {% endif %}
+  <blockquote>{{ greeting.content }}</blockquote>
+</div>
+{% endfor %}
+<!-- [END greetings] -->

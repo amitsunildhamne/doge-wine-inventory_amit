@@ -1,0 +1,11 @@
+indexes:
+- kind: Wine
+  ancestor: yes
+  properties:
+  - name: date
+    direction: desc
+- kind: Cart
+  ancestor: yes
+  properties:
+    - name: date
+      direction: desc

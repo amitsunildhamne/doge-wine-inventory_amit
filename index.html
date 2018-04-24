@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <!-- [START css] -->
+    <link type="text/css" rel="stylesheet" href="/stylesheets/main.css">
+    <link type = "text/css" rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link type="text/css" rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.css">
+    <!-- [END css] -->
+    <style type="text/css">
+      body {
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #dddddd;
+      }
+      blockquote {
+        margin-bottom: 10px;
+        border-left-color: #bbb;
+      }
+      form {
+        margin-top: 0 auto;
+        width: 550px;
+        padding: : 1em;
+        border: 1px solid #CCC;
+        border-radius: : 1em;
+      }
+      i{
+        font-style: italic;
+      }
+    label {
+      display: inline-block;;
+      width: 200px;
+      text-align: right;
+    }
+    input {
+      font: 1em sans-serif;
+      width: 300px;
+      box-sizing: border-box;
+      border: 1px solid #999;
+    }
+      center {
+        font-size: x-large;
+        color:#0000cc ;
+      }
+      button {
+        margin-left: .5em;
+      }
+      .button {
+        padding-left: 200px;
+      }
+      form div + div{
+        margin-top: 1em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <center>
+      <br>
+          <font size="+2" color="0000CC"> ADD WINE INFO TO OUR REPO</font>
+      <br>
+      <br>
+    </center>
+    <hr>
+    <blockquote>
+      {% if error %}
+      <i> Error: Enter all fields </i>
+      {% endif %}
+
+    </blockquote>
+      <form action="/enter?category_name={{ category_name }}" method="post">
+        <div>
+          <label for ="country">Country of Origin:</label>
+          <input type = "text" name= "country">
+        </div>
+        <div>
+          <label for ="region">Region:</label>
+          <input type = "text" name= "region">
+        </div>
+        <div>
+          <label for ="variety">Variety:</label>
+          <input type = "text" name= "variety">
+        </div>
+        <div>
+          <label for ="winery">Winery Name:</label>
+          <input type = "text" name= "winery">
+        </div>
+        <div>
+          <label for ="year">Year:</label>
+          <input type = "text" name= "year">
+        </div>
+        <div>
+          <label for ="price">Price:</label>
+          <input type = "number" name= "price">
+        </div>
+        <div class="button">
+          <button type="submit">Enter wine info</button>
+        </div>
+      </form>
+
+      <hr>
+
+      <form >Category:
+        <input value="{{ category_name }}" name="category_name">
+        <button type = "submit">Switch</button>
+      </form>
+
+      <a href></a>
+      <br>
+      <br>
+      <center>
+        <a href="."> Return to main page </a>
+      </center>
+  </body>
+</html>
+{% endautoescape %}

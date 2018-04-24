@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+<head>
+  <link type = "text/css" rel="stylesheet" href="/stylesheets/main.css">
+  <link type = "text/css" rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+  <link type="text/css" rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.css">
+  <title> Amit Dhamne's Wine Inventory App</title>
+  <style type="text/css">
+    body{
+      padding-top: 40px;
+      padding-bottom: 40px;
+      padding-left: 40px;
+      padding-right: 40px;
+      background-color: #dddddd;
+    }
+    center{
+      font-size: x-large;
+      color: #0000CC;
+    }
+    blockquote{
+      margin-bottom: 10px;
+      border-left-color: #bbb;
+    }
+    form{
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <center>
+    <br>
+    <font size="+2" color="0000CC">Amit Dhamne's Wine Inventory App </font>
+    <br>
+    <br>
+    <br>
+  </center>
+    <hr>
+    <br>
+    <ul>
+      <li>
+        <a href="/display?category_name=red"> Browse red wines</a>
+      </li>
+      <li>
+        <a href="/display?category_name=white"> Browse white wines</a>
+      </li>
+      <li>
+        <a href="/display?category_name=rose"> Browse rose wines</a>
+      </li>
+      <li>
+        <a href="/display?category_name=sparkling"> Browse sparkling wines</a>
+      </li>
+    </ul>
+    <ul>
+      <li>
+        <a href="/search"> Search for wines </a>
+      </li>
+    </ul>
+    <ul>
+      <li>
+        <a href="/enter"> Enter new wine info </a>
+      </li>
+    </ul>
+    {% if user %}
+    <ul>
+      <li>
+        <a href="/checkout?cart_name={{ user.user_id() }}">Checkout</a>
+      </li>
+    </ul>
+    {% else %}
+    <ul>
+      <li>
+        <a>Checkout</a>
+      </li>
+    </ul>
+    {% endif %}
+    <br>
+    <br>
+    <a href="{{ url|safe }}">{{ url_linktext }}</a>
+    <br>
+    <br>
+    {% if user %}
+      <b> Signed in as {{ user.email() }} </b>
+    {% else %}
+      <b> Signed in as Guest </b>
+    {% endif %}
+  </body>
+</html>
+{% endautoescape %}

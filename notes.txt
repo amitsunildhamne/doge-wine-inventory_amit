@@ -1,0 +1,17 @@
+Assignment 2:
+1. add shopping cart functionality  DONE
+2. Add Quantity parameter           DONE
+3. add webpage for checkout feature with thank you message  DONE
+4. Way to delete the shopping cart  DONE
+5. Only users logged in can purchase items    DONE
+6. Info stored per user: wines purchased and their prices,
+   the date and time, and the user ID of the purchaser. DONE
+7. Modify search html                                   DONE
+8. corner case of empty field in add to cart            DONE
+9. If empty cart print Empty Cart and disable purchase  DONE
+10. Add link to checkout                                DONE
+11. Doesn't immediately add after login in display page DONE
+12. Optimize the quantity parameter                   DONE
+13. add date and time parameter to accur              DONE
+14. Click and notify the user that he has to sign in
+15. Timing and date

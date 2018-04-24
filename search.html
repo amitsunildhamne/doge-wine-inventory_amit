@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+<head>
+  <link type = "text/css" rel="stylesheet" href="/stylesheets/main.css">
+  <link type = "text/css" rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+  <link type="text/css" rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.css">
+  <style>
+    body{
+      padding-top: 40px;
+      padding-bottom: 40px;
+      background-color: #dddddd;
+      font-family: Verdana,Helvetica, sans-serif;
+    }
+
+/*    label{
+      display: inline-block;
+      width: 200px;
+      text-align: right;
+    }
+    input{
+      font: 1em sans-serif;
+      width: 300px;
+      box-sizing: border-box;
+      border: 1px solid #999;
+    }
+    form {
+      margin: 0 auto;
+      width: 550px;
+      padding: 1em;
+      border: 1px solid #CCC;
+      border-radius: 1em;
+    }
+    */
+  </style>
+</head>
+<body>
+  <center>
+    <br>
+    <font size="+2" color="0000CC"> Search Page </font>
+    <br>
+    <br>
+  </center>
+  <hr>
+  {% if error_sign_in %}
+  <b align=right color=red font-size=13px> Please sign in! </b>
+  {% endif %}
+  {% if error_quantity %}
+  <b align=right color=red font-size=13px> Please enter a quantity </b>
+  {% endif %}
+  {% for wine in wines %}
+  <blockquote> {{ wine.winery }} {{ wine.variety }} {{ wine.year }} {{ wine.region }} {{ wine.country }} ${{wine.price}}
+    <form action="/search_add_cart?cart_name={{ cart_name }}&category_name={{ category_name }}" method="post">
+      Quantity (maximum 20)
+      <div><input type="number" name="quantity" min="1" max="20" required></div>
+      <div><input name="cart_name" type="submit" value="Add to cart"></div>
+      <div><input type="hidden" name="winery" value={{wine.winery}}></div>
+      <div><input type="hidden" name="variety" value={{wine.variety}}></div>
+      <div><input type="hidden" name="year" value={{wine.year}}></div>
+      <div><input type="hidden" name="region" value={{wine.region}}></div>
+      <div><input type="hidden" name="country" value={{wine.country}}></div>
+      <div><input type="hidden" name="price" value={{wine.price}}></div>
+    </form>
+  </blockquote>
+  {% endfor %}
+  <blockquote>
+  {% if error_empty_fields %}
+   <i> Error: Enter at least one field</i>
+  {% endif %}
+  {% if error_no_result %}
+  <i> Error: No results found</i>
+  {% endif %}
+  </blockquote>
+  <hr>
+  <form action="/search?category_name={{ category_name }}" method="post">
+    <div>
+      <label for="country"> Country of Origin:</label>
+      <input type=text name="country">
+    </div>
+    <div>
+      <label for="region"> Region:</label>
+      <input type=text name="region">
+    </div>
+    <div>
+      <label for="variety"> Variety:</label>
+      <input type=text name="variety">
+    </div>
+    <div>
+      <label for="winery"> Winery Name:</label>
+      <input type=text name="winery">
+    </div>
+    <div class="button">
+      <button type="submit">Search</button>
+    </div>
+  </form>
+  <hr>
+  <form>
+    Category:
+    <input value="{{ category_name }}" name="category_name">
+    <button type="submit">Switch</button>
+  </form>
+  <br>
+  <br>
+  <a href="{{ url|safe }}">{{ url_linktext }}</a>
+  {% if user %}
+      <div align="right"><a href="/checkout?cart_name={{ user.user_id() }}">Checkout</a></div>
+  {% else %}
+      <div align="right"><a>Checkout</a></div>
+  {% endif %}
+  <br>
+  <br>
+  {% if user %}
+  <b> Signed in as {{ user.email() }} </b>
+  {% else %}
+  <b> Signed in as Guest </b>
+  {% endif %}
+  <br>
+  <br>
+  <center>
+    <a href=".">Return to main page </a>
+  </center>
+</body>
+</html>
+{% endautoescape %}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <link type = "text/css" rel="stylesheet" href="/stylesheets/main.css">
+    <link type = "text/css" rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link type="text/css" rel="stylesheet" href="/bootstrap/css/bootstrap-responsive.css">
+    <style>
+      body{
+        padding-top: 40px;
+        padding-bottom: 40px;
+        background-color: #dddddd;
+        font-family: Verdana,Helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <center>
+      <br>
+      <font size="+2" color="0000CC"> CHECKOUT </font>
+      <br>
+      <br>
+    </center>
+    <hr>
+    <b>Signed in as <i>{{ user.email() }}</i></b>
+    <br>
+    <br>
+    {% for cart in carts %}
+    <p align="left"> {{ cart.wine_items.wine.winery }}  {{ cart.wine_items.wine.variety }} {{ cart.wine_items.wine.year }} {{ cart.wine_items.wine.region }} {{ cart.wine_items.wine.country }} ${{ cart.wine_items.wine.price }} Quantity:{{ cart.wine_items.quantity }}
+      <form action="/delete_cart?cart_name={{ cart_name }}" method="post">
+        <div><input value="Delete" type="submit"></div>
+        <div><input type="hidden" name="quantity" value="{{ cart.wine_items.quantity }}"></div>
+        <div><input type="hidden" name="winery" value="{{cart.wine_items.wine.winery}}"></div>
+        <div><input type="hidden" name="variety" value="{{cart.wine_items.wine.variety}}"></div>
+        <div><input type="hidden" name="year" value="{{cart.wine_items.wine.year}}"></div>
+        <div><input type="hidden" name="region" value="{{cart.wine_items.wine.region}}"></div>
+        <div><input type="hidden" name="country" value="{{cart.wine_items.wine.country}}"></div>
+        <div><input type="hidden" name="price" value="{{cart.wine_items.wine.price}}"></div>
+      </form>
+    </p>
+    {% endfor %}
+    <br>
+    {% if min_purchase %}
+    <blockquote><b>Please Add to Cart!</b></blockquote>
+    {% endif %}
+    <br>
+    <p align="left">Your total cost is $<i>{{ total_cost }}</i></p>
+    <br>
+    <form action="/checkout?cart_name={{ cart_name }}" method="post">
+      <div><input value="Purchase" type="submit" name="cart_name"></div>
+      <div><input type="hidden" name="user_id" value="{{ cart_name }}"></div>
+      <div><input type="hidden" name="email_id" value="{{ user.email() }}"></div>
+    </form>
+    <br>
+    <br>
+    <center>
+      <a href="."> Return to main page </a>
+    </center>
+  </body>
+</html>
+{% endautoescape %}
