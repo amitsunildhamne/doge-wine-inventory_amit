@@ -47,6 +47,7 @@ class Author(ndb.Model):
 
 class Wine(ndb.Model):
     """A main model for representing an individual Guestbook entry."""
+    wine_id = ndb.IntegerProperty(indexed=True)
     country = ndb.StringProperty(indexed=True)
     region = ndb.StringProperty(indexed=True)
     variety = ndb.StringProperty(indexed=True)
@@ -73,11 +74,11 @@ class Bid(ndb.model):
     wine_items = ndb.StructuredProperty(Wine_Items, indexed=True)
     time_started = ndb.TimeProperty(auto_now_add=True)
     date_started = ndb.DateProperty(auto_now_add=True)
-    date_end = ndb.DateProperty(auto_now_add=True)
-    time_end = ndb.TimeProperty(auto_now_add=True)
-    bid_price = ndb.FloatProperty(auto_now_add=True)
-    quantity = ndb.IntegerProperty(auto_now_add=True)
-    quantity_available = ndb.IntegerProperty(auto_now_add=True)
+    date_end = ndb.DateProperty()
+    time_end = ndb.TimeProperty()
+    bid_price = ndb.FloatProperty(indexed=True)
+    quantity = ndb.IntegerProperty(indexed=False)
+    quantity_available = ndb.IntegerProperty(indexed=False)
 
 class MainPage(webapp2.RequestHandler): #displays main page
     def get(self):
