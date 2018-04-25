@@ -51,6 +51,7 @@ class Wine(ndb.Model):
     year = ndb.StringProperty(indexed=True)
     price = ndb.FloatProperty(indexed=True)
     date = ndb.DateTimeProperty(auto_now_add=True)
+    total_bottles = ndb.IntegerProperty(indexed=False)
 # [END wine info]
 class Wine_Items(ndb.Model):
     wine = ndb.StructuredProperty(Wine)
@@ -232,8 +233,9 @@ class InfoPage(webapp2.RequestHandler): # adds info
         wine.winery = self.request.get('winery')
         wine.year = self.request.get('year')
         wine.price = float(self.request.get('price'))
+        wine.total_bottles = int(self.request.get('total_bottles'))
 
-        if wine.country and wine.year and wine.region and wine.variety and wine.winery and wine.price:
+        if wine.country and wine.year and wine.region and wine.variety and wine.winery and wine.price and wine.total_bottles:
             wine.put()
             query_params = {'category_name': category_name}
             self.redirect('/?'+ urllib.urlencode(query_params))
@@ -377,13 +379,24 @@ class DeleteCart(webapp2.RequestHandler):
 class ConfirmPage(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
+
+        category_name = self.request.get('category_name',DEFAULT_CATEGORY_NAME)
+        wine_query = Wine.query(ancestor = category_key(category_name)).order(-Wine.date)
+        wines = wine_query.fetch()
+
         cart_name = self.request.get('cart_name',user.user_id())
         cart_query = Cart.query(ancestor=cart_key(cart_name)).order(-Cart.date)
         carts = cart_query.fetch()
+
+        bid_cart_name = self.request.get('cart_name',user.user_id())
+        bid_query = Bid.query(ancestor = bid_key(bid_cart_name)).order(-Cart.date)
+        bids = bid_query.fetch()
+
         total_cost=0
         for cart in carts:
             if cart.wine_items.quantity:
                 total_cost+=(cart.wine_items.wine.price*cart.wine_items.quantity)
+                cart.wine_items.wine.total_bottles -= cart.wine_items.wine.quantity
             else:
                 total_cost+=cart.wine_items.wine.price
         for cart in carts:
@@ -397,6 +410,25 @@ class ConfirmPage(webapp2.RequestHandler):
             year= cart.wine_items.wine.year),
             quantity=cart.wine_items.quantity)
             cart_purchased.put()
+
+        for wine in wines:
+            num_thresh = 0.25 * (wine.price)
+            if wine.total_bottles <= num_thresh:
+                bid_start = Bid(parent =bid_key(bid_cart_name))
+                bid_start.highest_bidder = Author(identity=user.user_id(),email=user.email())
+                bid_start.wine_items=Wine_Items(wine=Wine( country=cart.wine_items.wine.country,
+                region= wine.region,
+                winery= wine.winery,
+                variety= wine.variety,
+                price= wine.price,
+                year= wine.year)
+                bid_start.price = wine.price
+                bid_start.quantity = 0
+                bid_start.quantity_available = wine.total_bottles
+                bid_start.put()
+                wine.key.delete()
+
+
         template_values = {
         'user':user,
         'carts':carts,
