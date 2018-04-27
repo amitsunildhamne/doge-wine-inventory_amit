@@ -9,3 +9,13 @@ indexes:
   properties:
     - name: date
       direction: desc
+- kind: Bid
+  ancestor: yes
+  properties:
+    - name: date
+      direction: desc
+- kind: BidCart
+  ancestor: yes
+  properties:
+    - name: date
+      direction: desc

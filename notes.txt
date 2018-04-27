@@ -15,3 +15,27 @@ Assignment 2:
 13. add date and time parameter to accur              DONE
 14. Click and notify the user that he has to sign in
 15. Timing and date
+
+Assignment 4:
+1. Make Wines to bid Database
+2. Make Shopping Cart for wines to bid_key DONE
+3. Add Link for Wines open for bidding on display BidPage DONE
+5. Modify existing code to accomodate changes in DB
+6. Add emailing part to bidding
+7. Notify me part
+10. Deduct quantity_available on purchase, if 0 then remove entry
+11. Deduct quantity available to bid, if 0 then remove entry, if non 0 and below threshold then read for Bidding
+else add it to general
+12. Prevent addition of items in inventory till bidding not over
+13. Prevent addition of items greater than quantity available: if newly added items + old items > available items add only available items
+14. Don't allow to bid more than quantity_available
+Note: Bidding to winners will be given on best effort basis. if 5 is promised and 2 are available only 2 will be given
+15. Change entire code to datetime
+16. Add hidden wine id all html pages:
+  Checklist:
+  A. thank.html
+  B. search.html
+  C. wine_info
+  D. checkout
+  E. bidding.html
+17. Do I need to handle the case where cart quantity outdated

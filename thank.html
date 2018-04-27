@@ -26,7 +26,8 @@
     <br>
     <br>
     {% for cart in carts %}
-    <p align="left"> {{ cart.wine_items.wine.winery }}  {{ cart.wine_items.wine.variety }} {{ cart.wine_items.wine.year }} {{ cart.wine_items.wine.region }} {{ cart.wine_items.wine.country }} ${{ cart.wine_items.wine.price }} Quantity:{{ cart.wine_items.quantity }}</p>
+    <p align="left"> Winery: {{ cart.wine.winery }};  Variety: {{ cart.wine.variety }}; Year: {{ cart.wine.year }}; Region: {{ cart.wine.region }}; Country: {{ cart.wine.country }}; Price per item: ${{ cart.wine.price }}; Quantity:{{ cart.quantity_to_buy }}</p>
+    <div><input type="hidden" value="{{ cart.wine.wine_id }}" name=wine_id></div>
     {% endfor %}
     <br>
     <br>

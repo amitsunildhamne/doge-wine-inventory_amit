@@ -26,16 +26,17 @@
     <br>
     <br>
     {% for cart in carts %}
-    <p align="left"> {{ cart.wine_items.wine.winery }}  {{ cart.wine_items.wine.variety }} {{ cart.wine_items.wine.year }} {{ cart.wine_items.wine.region }} {{ cart.wine_items.wine.country }} ${{ cart.wine_items.wine.price }} Quantity:{{ cart.wine_items.quantity }}
+    <p align="left"> {{ cart.wine.winery }}  {{ cart.wine.variety }} {{ cart.wine.year }} {{ cart.wine.region }} {{ cart.wine.country }} ${{ cart.wine.price }} Quantity:{{ cart.quantity_to_buy }}
       <form action="/delete_cart?cart_name={{ cart_name }}" method="post">
         <div><input value="Delete" type="submit"></div>
-        <div><input type="hidden" name="quantity" value="{{ cart.wine_items.quantity }}"></div>
-        <div><input type="hidden" name="winery" value="{{cart.wine_items.wine.winery}}"></div>
-        <div><input type="hidden" name="variety" value="{{cart.wine_items.wine.variety}}"></div>
-        <div><input type="hidden" name="year" value="{{cart.wine_items.wine.year}}"></div>
-        <div><input type="hidden" name="region" value="{{cart.wine_items.wine.region}}"></div>
-        <div><input type="hidden" name="country" value="{{cart.wine_items.wine.country}}"></div>
-        <div><input type="hidden" name="price" value="{{cart.wine_items.wine.price}}"></div>
+        <div><input type="hidden" name="quantity" value="{{ cart.quantity_to_buy }}"></div>
+        <div><input type="hidden" name="winery" value="{{cart.wine.winery}}"></div>
+        <div><input type="hidden" name="variety" value="{{cart.wine.variety}}"></div>
+        <div><input type="hidden" name="year" value="{{cart.wine.year}}"></div>
+        <div><input type="hidden" name="region" value="{{cart.wine.region}}"></div>
+        <div><input type="hidden" name="country" value="{{cart.wine.country}}"></div>
+        <div><input type="hidden" name="price" value="{{cart.wine.price}}"></div>
+        <div><input type="hidden" name"wine_id" value="{{ cart.wine.wine_id }}">
       </form>
     </p>
     {% endfor %}

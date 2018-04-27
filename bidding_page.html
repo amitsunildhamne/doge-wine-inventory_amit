@@ -17,8 +17,52 @@
 <body>
   <center>
     <br>
-    <font size="+2" color="0000CC"> Bidding Page
+    <font size="+2" color="0000CC"> Bidding Page for {{ category_name }} Wines
     </font>
-
+    <div><input type="hidden" name="category_name" value="{{ category_name }}"></div>
+    <br>
+    <br>
   </center>
+  <hr>
+  {% if error_sign_in %}
+  <b align=right color=red font-size=13px> Please sign in! </b>
+  {% endif %}
+
+  {% for bid in bids %}
+  <blockquote>
+     Winery: {{ bid.wine.winery }}; variety: {{ bid.wine.variety }}; Year: {{ bid.wine.year }}; Region: {{ bid.wine.region }}; Country: {{ bid.wine.country }}; Maximum Bid Price : ${{bid.highest_bid}}; Minimum Bid Price: {{ bid.wine.price }} <br>
+     Started on {{ bid.date_started }}, {{ bid.time_started }}. Ends on {{ bid.date_end }}, {{ bid.time_end }}
+    <form action="/bidding?cart_name={{ cart_name }}&category_name={{ category_name }}" method="post">
+      Quantity (Allowed to bid for maximum {{ bid.wine.quantity_available }})
+      <div><input type="number" name="quantity" min="1" max="{{ bid.wine.quantity_available }}"></div>
+      <div><input name="cart_name" type="submit" value="Add to cart"></div>
+      <div><input type="hidden" name="wine_id" value="{{ bid.wine.wine_id }}"></div>
+      <div><input type="hidden" name="winery" value="{{ bid.wine.winery }}"></div>
+      <div><input type="hidden" name="variety" value="{{ bid.wine.variety }}"></div>
+      <div><input type="hidden" name="year" value="{{ bid.wine.year }}"></div>
+      <div><input type="hidden" name="region" value="{{ bid.wine.region }}"></div>
+      <div><input type="hidden" name="country" value="{{ bid.wine.country }}"></div>
+      <div><input type="hidden" name="price" value="{{ bid.wine.price }}"></div>
+      <div><input type="hidden" name="highest_bid" value="{{ bid.highest_bid }}"></div>
+      <div><label for="bid_price">Bid Price:</label><input type="number" name="bid_price"></div>
+    </form>
+  </blockquote>
+  {% endfor %}
+  <br>
+  <br>
+  <a href="{{ url|safe }}">{{ url_linktext }}</a>
+  <br>
+  <br>
+  {% if user %}
+    <b> Signed in as {{ user.email() }} </b>
+  {% else %}
+    <b>Signed in as Guest </b>
+  {% endif %}
+  <br>
+  <br>
+  <center>
+    <a href="."> Return to main page </a>
+  </center>
+</body>
+</html>
 {% endautoescape %}

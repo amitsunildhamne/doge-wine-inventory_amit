@@ -49,10 +49,11 @@
   <b align=right color=red font-size=13px> Please enter a quantity </b>
   {% endif %}
   {% for wine in wines %}
-  <blockquote> {{ wine.winery }} {{ wine.variety }} {{ wine.year }} {{ wine.region }} {{ wine.country }} ${{wine.price}}
+  <blockquote>
+    Winery: {{ wine.winery }}; variety: {{ wine.variety }}; Year: {{ wine.year }}; Region: {{ wine.region }}; Country: {{ wine.country }}; Price: ${{wine.price}}
     <form action="/search_add_cart?cart_name={{ cart_name }}&category_name={{ category_name }}" method="post">
-      Quantity (maximum 20)
-      <div><input type="number" name="quantity" min="1" max="20" required></div>
+      Quantity (maximum {{wine.quantity_available}})
+      <div><input type="number" name="quantity" min="1" max="{{ wine.quantity_available }}" required></div>
       <div><input name="cart_name" type="submit" value="Add to cart"></div>
       <div><input type="hidden" name="winery" value={{wine.winery}}></div>
       <div><input type="hidden" name="variety" value={{wine.variety}}></div>
@@ -60,6 +61,7 @@
       <div><input type="hidden" name="region" value={{wine.region}}></div>
       <div><input type="hidden" name="country" value={{wine.country}}></div>
       <div><input type="hidden" name="price" value={{wine.price}}></div>
+      <div><input type="hidden" name="wine_id" value="{{ wine.wine_id }}"></div>
     </form>
   </blockquote>
   {% endfor %}
