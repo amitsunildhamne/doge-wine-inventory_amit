@@ -5,6 +5,7 @@
 import os
 import urllib
 import hashlib
+import datetime
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
@@ -75,10 +76,8 @@ class Cart(ndb.Model):
 class Bid(ndb.Model):
     wine = ndb.StructuredProperty(Wine, indexed=True)
     highest_bid = ndb.FloatProperty(indexed=True) #First Query BidCart for highest bid and if nil then make highest bid equal to price
-    time_started = ndb.TimeProperty(auto_now_add=True)
-    date_started = ndb.DateProperty(auto_now_add=True)
-    date_end = ndb.DateProperty()
-    time_end = ndb.TimeProperty()
+    datetime_started = ndb.DateTimeProperty(auto_now_add=True)
+    datetime_end = ndb.DateTimeProperty()
 
 class BidCart(ndb.Model):
     bid = ndb.StructuredProperty(Bid, indexed=True)
@@ -156,9 +155,7 @@ class DisplayPage(webapp2.RequestHandler): #displays individual category page
 
             wines_query = Wine.query(ancestor=category_key(category_name)).filter(ndb.GenericProperty("wine_id")==wine.wine_id) #Pull out the latest quantity available
             wines = wines_query.fetch()
-            print "************* PRINTING WINE IDS ************"
-            for item in wines:
-                print item.wine_id
+
             for cart in carts:
                 if cart.wine.winery == wine.winery:
                     if cart.wine.variety == wine.variety:
@@ -194,8 +191,9 @@ class BidPage(webapp2.RequestHandler):
 
     def get(self):
         category_name = self.request.get('category_name', DEFAULT_CATEGORY_NAME).lower()
-        wines_to_bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.date_started).order(-Bid.time_started)
+        wines_to_bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
         error_sign_in = self.request.get('error_sign_in',False)
+        response_recorded = self.request.get('response_recorded', False)
         wines_to_bid = wines_to_bid_query.fetch()
         user = users.get_current_user()
         if user:
@@ -212,6 +210,7 @@ class BidPage(webapp2.RequestHandler):
         'category_name': category_name,
         'bids': wines_to_bid,
         'url_linktext':url_linktext,
+        'response_recorded': response_recorded,
         'error_sign_in':error_sign_in,
         'url':url,
         }
@@ -234,7 +233,7 @@ class BidPage(webapp2.RequestHandler):
             quantity_to_bid = int(self.request.get('quantity'))
             bid_price = float(self.request.get('bid_price'))
             highest_bid = float(self.request.get('highest_bid'))
-            bid_cart = BidCart(parent=bid_cart_key(wine_id))
+            bid_cart = BidCart(parent=bid_cart_key(wine.wine_id))
             if highest_bid < bid_price:
                 highest_bid = bid_price
                 bid_query = Bid.query(ancestor = category_key(category_name.lower()))
@@ -252,6 +251,9 @@ class BidPage(webapp2.RequestHandler):
             bid.bid_price = bid_price
             bid.quantity_to_bid = quantity_to_bid
             bid.put()
+            query_params= {'category_name':category_name,
+            'response_recorded':True}
+            self.redirect('/bidding?'+urllib.urlencode(query_params))
         else:
             query_params ={'error_sign_in':True,
             'category_name':category_name}

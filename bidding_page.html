@@ -28,14 +28,19 @@
   <b align=right color=red font-size=13px> Please sign in! </b>
   {% endif %}
 
+  {% if response_recorded %}
+  <b align=right color=red font-size=13px>Your Response has been recorded!</b>
+  {% endif %}
+  <br/>
+  <br/>
   {% for bid in bids %}
   <blockquote>
-     Winery: {{ bid.wine.winery }}; variety: {{ bid.wine.variety }}; Year: {{ bid.wine.year }}; Region: {{ bid.wine.region }}; Country: {{ bid.wine.country }}; Maximum Bid Price : ${{bid.highest_bid}}; Minimum Bid Price: {{ bid.wine.price }} <br>
-     Started on {{ bid.date_started }}, {{ bid.time_started }}. Ends on {{ bid.date_end }}, {{ bid.time_end }}
+     Winery: {{ bid.wine.winery }}; variety: {{ bid.wine.variety }}; Year: {{ bid.wine.year }}; Region: {{ bid.wine.region }}; Country: {{ bid.wine.country }}; Maximum Bid Price : ${{bid.highest_bid}}; Minimum Bid Price: {{ bid.wine.price }} <br/>
+     Started on {{ bid.datetime_started }}. Ends on {{ bid.datetime_end }} <br/>
+     <br/>
     <form action="/bidding?cart_name={{ cart_name }}&category_name={{ category_name }}" method="post">
       Quantity (Allowed to bid for maximum {{ bid.wine.quantity_available }})
       <div><input type="number" name="quantity" min="1" max="{{ bid.wine.quantity_available }}"></div>
-      <div><input name="cart_name" type="submit" value="Add to cart"></div>
       <div><input type="hidden" name="wine_id" value="{{ bid.wine.wine_id }}"></div>
       <div><input type="hidden" name="winery" value="{{ bid.wine.winery }}"></div>
       <div><input type="hidden" name="variety" value="{{ bid.wine.variety }}"></div>
@@ -44,7 +49,8 @@
       <div><input type="hidden" name="country" value="{{ bid.wine.country }}"></div>
       <div><input type="hidden" name="price" value="{{ bid.wine.price }}"></div>
       <div><input type="hidden" name="highest_bid" value="{{ bid.highest_bid }}"></div>
-      <div><label for="bid_price">Bid Price:</label><input type="number" name="bid_price"></div>
+      <div><label for="bid_price">Bid Price:</label><input type="number" name="bid_price" min="{{ bid.wine.price }}"></div>
+      <div><input name="cart_name" type="submit" value="Bid"></div>
     </form>
   </blockquote>
   {% endfor %}
