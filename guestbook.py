@@ -531,8 +531,7 @@ class ConfirmPage(webapp2.RequestHandler):
                             quantity_available=wine_entry_to_modify.quantity_available,
                             wine_id = cart.wine.wine_id)
                         bid.highest_bid = cart.wine.price
-                        bid.datetime_end = datetime.datetime.now + datetime.timedelta(hours=4)
-                        # round off time to nearest hour
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
                         bid.put()
                         wines[0].key.delete()
                     else:
