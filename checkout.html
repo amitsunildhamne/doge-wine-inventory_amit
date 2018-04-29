@@ -25,6 +25,9 @@
     <b>Signed in as <i>{{ user.email() }}</i></b>
     <br>
     <br>
+    {% if session_error %}
+      <b align=right color=red font-size=13px> Cart has expired. Please add items again! </b>
+    {% endif %}
     {% for cart in carts %}
     <p align="left"> {{ cart.wine.winery }}  {{ cart.wine.variety }} {{ cart.wine.year }} {{ cart.wine.region }} {{ cart.wine.country }} ${{ cart.wine.price }} Quantity:{{ cart.quantity_to_buy }}
       <form action="/delete_cart?cart_name={{ cart_name }}" method="post">

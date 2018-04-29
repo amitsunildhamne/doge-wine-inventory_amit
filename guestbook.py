@@ -152,7 +152,6 @@ class DisplayPage(webapp2.RequestHandler): #displays individual category page
             quantity = int(self.request.get('quantity'))
             wine.wine_id = self.request.get('wine_id')
             wine.category = category_name
-
             wines_query = Wine.query(ancestor=category_key(category_name)).filter(ndb.GenericProperty("wine_id")==wine.wine_id) #Pull out the latest quantity available
             wines = wines_query.fetch()
 
@@ -340,7 +339,6 @@ class InfoPage(webapp2.RequestHandler): # adds info
         wine.price = float(self.request.get('price'))
         wine.quantity_available = int(self.request.get('quantity_available'))
         wine.wine_id = compute_hash(wine)
-        print "***** WINE ID: "+wine.wine_id
         if wine.country and wine.year and wine.region and wine.variety and wine.winery and wine.price and wine.quantity_available:
             wine.put()
             query_params = {'category_name': category_name}
@@ -433,6 +431,7 @@ class CheckoutPage(webapp2.RequestHandler):
         cart_name = self.request.get('cart_name', user.user_id())
         cart_query = Cart.query(ancestor= cart_key(cart_name)).order(-Cart.date)
         carts = cart_query.fetch()
+        session_error = self.request.get('session_error',False)
         total_cost=0
         for cart in carts:
             if cart.quantity_to_buy:
@@ -441,6 +440,7 @@ class CheckoutPage(webapp2.RequestHandler):
                 total_cost+=cart.wine.price
         template_values = {
         'min_purchase': min_purchase,
+        'session_error':session_error,
         'user': user,
         'carts': carts,
         'total_cost': total_cost,
@@ -490,7 +490,7 @@ class ConfirmPage(webapp2.RequestHandler):
         cart_query = Cart.query(ancestor=cart_key(cart_name)).order(-Cart.date)
         carts = cart_query.fetch()
         total_cost=0
-
+        session_error=False
         for cart in carts:
             if cart.quantity_to_buy:
                 total_cost+=(cart.wine.price*cart.quantity_to_buy)
@@ -498,61 +498,71 @@ class ConfirmPage(webapp2.RequestHandler):
                 total_cost+=cart.wine.price
 
         for cart in carts:
-            cart_purchased = Cart(parent=purchase_key(cart_name))
-            cart_purchased.author = Author(identity=user.user_id(),email=user.email())
-
-            cart_purchased.wine = Wine( country=cart.wine.country,
-            region= cart.wine.region,
-            winery= cart.wine.winery,
-            variety= cart.wine.variety,
-            price= cart.wine.price,
-            year= cart.wine.year,
-            category=cart.wine.category,
-            wine_id = cart.wine.wine_id)
-
-            cart_purchased.quantity_to_buy=cart.quantity_to_buy
-            cart_purchased.put() #Confirmed Purchase
-
             wine_query = Wine.query(ancestor=category_key(cart.wine.category)).filter(ndb.GenericProperty("wine_id")==cart.wine.wine_id)
             wines = wine_query.fetch()
-            wine_entry_to_modify = wines[0].key.get()
+            if len(wines):
+                wine_entry_to_modify = wines[0].key.get()
+                if wine_entry_to_modify.quantity_available>= cart.quantity_to_buy:
+                    cart_purchased = Cart(parent=purchase_key(cart_name))
+                    cart_purchased.author = Author(identity=user.user_id(),email=user.email())
+                    cart_purchased.wine = Wine( country=cart.wine.country,
+                        region= cart.wine.region,
+                        winery= cart.wine.winery,
+                        variety= cart.wine.variety,
+                        price= cart.wine.price,
+                        year= cart.wine.year,
+                        category=cart.wine.category,
+                        wine_id = cart.wine.wine_id)
+                    cart_purchased.quantity_to_buy=cart.quantity_to_buy
+                    cart_purchased.put() #Confirmed Purchase
+                    wine_entry_to_modify.quantity_available -= cart.quantity_to_buy #Deduct from the total available quantity
 
-            wine_entry_to_modify.quantity_available -= cart.quantity_to_buy #Deduct from the total available quantity
-
-            if wine_entry_to_modify.quantity_available==0: #Quantity becomes 0 then remove item from db
-                wines[0].key.delete()
-
-            elif wine_entry_to_modify.quantity_available <= (0.25*wine_entry_to_modify.price): #Calculate the threshold and add to the bid
-                bid = Bid(parent = bid_key(cart.wine.category))
-                bid.wine = Wine(country=cart.wine.country,
-                region= cart.wine.region,
-                winery= cart.wine.winery,
-                variety= cart.wine.variety,
-                price= cart.wine.price,
-                year= cart.wine.year,
-                category=cart.wine.category,
-                quantity_available=wine_entry_to_modify.quantity_available,
-                wine_id = cart.wine.wine_id)
-                bid.highest_bid = cart.wine.price
-                #add datetime (ends)
-                bid.put()
-                wines[0].key.delete()
-
+                    if wine_entry_to_modify.quantity_available==0: #Quantity becomes 0 then remove item from db
+                        wines[0].key.delete()
+                    elif wine_entry_to_modify.quantity_available <= (0.25*wine_entry_to_modify.price): #Calculate the threshold and add to the bid
+                        bid = Bid(parent = bid_key(cart.wine.category))
+                        bid.wine = Wine(country=cart.wine.country,
+                            region= cart.wine.region,
+                            winery= cart.wine.winery,
+                            variety= cart.wine.variety,
+                            price= cart.wine.price,
+                            year= cart.wine.year,
+                            category=cart.wine.category,
+                            quantity_available=wine_entry_to_modify.quantity_available,
+                            wine_id = cart.wine.wine_id)
+                        bid.highest_bid = cart.wine.price
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
+                        bid.put()
+                        wines[0].key.delete()
+                    else:
+                        wine_entry_to_modify.put()
+                else:
+                    session_error=True
+                    break
             else:
-                wine_entry_to_modify.put()
-
-        template_values = {
-        'user':user,
-        'carts':carts,
-        'total_cost':total_cost,
-        'cart_name':cart_name,
-        'time':cart.time,
-        'date':cart.date
-        }
-        template = JINJA_ENVIRONMENT.get_template('thank.html')
-        self.response.write(template.render(template_values))
-        for cart in carts:
-            cart.key.delete()
+                session_error=True
+                break
+        if session_error==False:
+            template_values = {
+                'user':user,
+                'carts':carts,
+                'total_cost':total_cost,
+                'cart_name':cart_name,
+                'time':cart.time,
+                'date':cart.date
+                }
+            template = JINJA_ENVIRONMENT.get_template('thank.html')
+            self.response.write(template.render(template_values))
+            for cart in carts:
+                cart.key.delete()
+        else:
+            for cart in carts:
+                cart.key.delete()
+            query_params = {
+                'session_error':session_error,
+                'cart':cart_name,
+                }
+            self.redirect('/checkout?'+urllib.urlencode(query_params))
 
 class BidEnd(webapp2.RequestHandler):
     def get(self):
