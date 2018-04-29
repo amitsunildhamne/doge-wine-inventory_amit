@@ -531,7 +531,7 @@ class ConfirmPage(webapp2.RequestHandler):
                             quantity_available=wine_entry_to_modify.quantity_available,
                             wine_id = cart.wine.wine_id)
                         bid.highest_bid = cart.wine.price
-                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=5)).replace(microsecond=0,second=0)
                         bid.put()
                         wines[0].key.delete()
                     else:
@@ -583,7 +583,7 @@ class BidEnd(webapp2.RequestHandler):
                 bid_cart_query = BidCart.query(ancestor = bid_cart_key(bid.wine.wine_id)).order(BidCart.bid_price)
                 bid_carts = bid_cart_query.fetch()
                 if len(bid_carts) == 0 :
-                    bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
+                    bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=5)).replace(microsecond=0,second=0)
                     #add more time ( how much ) to the date time end to continue the bid
                 else:
                     for bid_cart in bid_carts:
@@ -596,7 +596,7 @@ class BidEnd(webapp2.RequestHandler):
                         bid_winners[-1].quantity_to_bid = bid_winners[-1].quantity_to_bid - (total_purchase - bid.wine.quantity_available)
 
                     elif total_purchase < bid.wine.quantity_available:
-                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=5)).replace(microsecond=0,second=0)
                         bid.wine.quantity_available -= total_purchase
                         flag = 1
 
@@ -614,27 +614,24 @@ class BidEnd(webapp2.RequestHandler):
                         message.send()
 
                         cart_name = self.request.get('cart_name',winner.bidder.user_id())
-
                         cart_purchased = Cart(parent=purchase_key(cart_name))
                         cart_purchased.author = Author(identity=winner.bidder.user_id(),email=winner.bidder.email())
-
                         cart_purchased.wine = Wine( country=winner.bid.wine.country,
                         region= winner.bid.wine.region,
                         winery= winner.bid.wine.winery,
                         variety= winner.bid.wine.variety,
-                        price= winner.bid.wine.price,
+                        price= winner.bid_price,# price needs to be highest_bid
                         year= winner.bid.wine.year,
                         category=winner.bid.wine.category,
                         wine_id = winner.bid.wine.wine_id)
 
                         cart_purchased.quantity_to_buy=winner.quantity_to_bid
                         cart_purchased.put() #Confirmed Purchase
+                        print "******* Email: "+ winner.bidder.email() + " Price "+ winner.bid_price+" **********"
                     if flag == 0:
                         bid.key.delete()
                     else:
                         bid.put()
-
-
 
 
 
