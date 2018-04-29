@@ -1,0 +1,4 @@
+cron:
+  - description: "daily summary job"
+    url: /bid_end
+    schedule: every 3 minutes
