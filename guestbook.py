@@ -557,19 +557,12 @@ class ConfirmPage(webapp2.RequestHandler):
 class BidEnd(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
-        if user:
-            url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-            default_cart = users.get_current_user().user_id()
-        else:
-            url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
         category_list = ['red', 'white', 'rose', 'sparkling']
         for category_name in category_list:
             bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
             bids_in_db = bid_query.fetch()        
-            #Todo : compare with date time end
             ending_bids = []
+
             for bids in bids_in_db:
                 if bids.datetime_end == datetime.datetime.now().replace(microsecond=0,second=0,minute=0):
                     ending_bids.append(bids)
@@ -577,51 +570,60 @@ class BidEnd(webapp2.RequestHandler):
             for bid in ending_bids:
                 total_purchase = 0
                 bid_winners = []
-                bid_cart_query = BidCart.query(ancestor = bid_cart_key(bid.wine.wine_id)).order(-BidCart.bid_price)
+                bid_cart_query = BidCart.query(ancestor = bid_cart_key(bid.wine.wine_id)).order(BidCart.bid_price)
                 bid_carts = bid_cart_query.fetch()
-                if len(bid_carts) <= 0 :
+                if len(bid_carts) == 0 :
                     bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
                     #add more time ( how much ) to the date time end to continue the bid
-                for bid_cart in bid_carts:
-                    if total_purchase <= bid.wine.quantity_available: 
-                        total_purchase += bid_cart.quantity_to_bid    
-                        bid_winners.append(bid_cart) # mail everyone in the bidders list 
+                else:
+                    for bid_cart in bid_carts:
+                        if total_purchase <= bid.wine.quantity_available: 
+                            total_purchase += bid_cart.quantity_to_bid    
+                            bid_winners.append(bid_cart) # mail everyone in the bidders list 
+                        else:
+                            break
+                    if total_purchase > bid.wine.quantity_available:
+                        bid_winners[-1].quantity_to_bid = bid_winners[-1].quantity_to_bid - (total_purchase - bid.wine.quantity_available)
+
+                    elif total_purchase < bid.wine.quantity_available:
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
+                        bid.wine.quantity_available -= total_purchase
+                        flag = 1
+                    
+                    for winner in bid_winners:
+                        #put the data in each in the purchase db
+                        user_mail = winner.bidder.email()
+                        subject = "Congrats!!"
+                        message = mail.EmailMessage(sender="info@appspot.gserviceaccount.com", subject = subject)
+
+                        if not mail.is_email_valid(userMail):
+                            self.response.out.write("Wrong email! Check again!")
+
+                        message.to = user_mail
+                        message.body = "Congrats! You won the bid"
+                        message.send()
+
+                        cart_name = self.request.get('cart_name',winner.bidder.user_id())
+
+                        cart_purchased = Cart(parent=purchase_key(cart_name))
+                        cart_purchased.author = Author(identity=winner.bidder.user_id(),email=winner.bidder.email())
+
+                        cart_purchased.wine = Wine( country=winner.bid.wine.country,
+                        region= winner.bid.wine.region,
+                        winery= winner.bid.wine.winery,
+                        variety= winner.bid.wine.variety,
+                        price= winner.bid.wine.price,
+                        year= winner.bid.wine.year,
+                        category=winner.bid.wine.category,
+                        wine_id = winner.bid.wine.wine_id)
+
+                        cart_purchased.quantity_to_buy=winner.quantity_to_bid
+                        cart_purchased.put() #Confirmed Purchase
+                    if flag == 0:
+                        bid.key.delete()
                     else:
-                        break
-                if total_purchase > bid.wine.quantity_available:
-                    bid_winners[-1].quantity_to_bid = bid_winners[-1].quantity_to_bid - (total_purchase - bid.wine.quantity_available)
-                
-                for winner in bid_winners:
-                    #put the data in each in the purchase db
-                    user_mail = winner.bidder.email()
-                    subject = "Congrats!!"
-                    message = mail.EmailMessage(sender="info@appspot.gserviceaccount.com", subject = subject)
+                        bid.put()
 
-                    if not mail.is_email_valid(userMail):
-                        self.response.out.write("Wrong email! Check again!")
-
-                    message.to = user_mail
-                    message.body = "Congrats! You won the bid"
-                    message.send()
-
-                    cart_name = self.request.get('cart_name',winner.bidder.user_id())
-
-                    cart_purchased = Cart(parent=purchase_key(cart_name))
-                    cart_purchased.author = Author(identity=winner.bidder.user_id(),email=winner.bidder.email())
-
-                    cart_purchased.wine = Wine( country=winner.bid.wine.country,
-                    region= winner.bid.wine.region,
-                    winery= winner.bid.wine.winery,
-                    variety= winner.bid.wine.variety,
-                    price= winner.bid.wine.price,
-                    year= winner.bid.wine.year,
-                    category=winner.bid.wine.category,
-                    wine_id = winner.bid.wine.wine_id)
-
-                    cart_purchased.quantity_to_buy=winner.quantity_to_bid
-                    cart_purchased.put() #Confirmed Purchase
-                
-                bid.key.delete()
 
 
 
@@ -637,5 +639,6 @@ app = webapp2.WSGIApplication([
     ('/delete_cart',DeleteCart),
     ('/confirmation',ConfirmPage),
     ('/bidding',BidPage),
+    ('/bid_end', BidEnd),
 ], debug=True)
 # [END app]
