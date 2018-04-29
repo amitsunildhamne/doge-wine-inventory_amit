@@ -258,6 +258,29 @@ class BidPage(webapp2.RequestHandler):
             'category_name':category_name}
             self.redirect('/bidding?'+ urllib.urlencode(query_params))
 
+class BidPageDelete(webapp2.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        admin = 0
+        if users.is_current_user_admin():
+            admin = 1
+        category_name = self.request.get('category_name', DEFAULT_CATEGORY_NAME).lower()
+        wines_bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
+        wines_bid = wines_bid_query.fetch()
+        for wines in wines_bid:
+            if wines.wine.wine_id == self.request.get('wine_id'):
+                wines.key.delete()
+                break
+        query_params = {'category_name':category_name, 'admin' : admin}
+        self.redirect('/bidding?'+urllib.urlencode(query_params))
+
 class SearchAddPage(webapp2.RequestHandler):
 
     def post(self):
@@ -649,6 +672,7 @@ app = webapp2.WSGIApplication([
     ('/delete_cart',DeleteCart),
     ('/confirmation',ConfirmPage),
     ('/bidding',BidPage),
+    ('/delete_bids', BidPageDelete),
     ('/bid_end', BidEnd),
 ], debug=True)
 # [END app]

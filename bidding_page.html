@@ -52,6 +52,12 @@
       <div><label for="bid_price">Bid Price:</label><input type="number" name="bid_price" min="{{ bid.wine.price }}"></div>
       <div><input name="cart_name" type="submit" value="Bid"></div>
     </form>
+    {% if admin == 1 %}
+    <form action="/delete_bids?catgory_name={{category_name }}" method="post">
+        <div><input value="Delete" type="submit"></div>
+        <div><input type="hidden" name="wine_id" value="{{ bid.wine.wine_id }}"></div>
+    </form>
+    {%endif%}
   </blockquote>
   {% endfor %}
   <br>
