@@ -238,7 +238,7 @@ class BidPage(webapp2.RequestHandler):
             bid_price = float(self.request.get('bid_price'))
             highest_bid = float(self.request.get('highest_bid'))
             bid_cart = BidCart(parent=bid_cart_key(wine.wine_id))
-            bid_query = Bid.query(ancestor = category_key(category_name.lower()))
+            bid_query = Bid.query(ancestor = bid_key(category_name))
             items = bid_query.fetch()
             for item in items:
                 if wine.wine_id == item.wine.wine_id:
