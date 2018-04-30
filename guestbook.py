@@ -238,16 +238,15 @@ class BidPage(webapp2.RequestHandler):
             bid_price = float(self.request.get('bid_price'))
             highest_bid = float(self.request.get('highest_bid'))
             bid_cart = BidCart(parent=bid_cart_key(wine.wine_id))
-            if highest_bid < bid_price:
-                highest_bid = bid_price
-                bid_query = Bid.query(ancestor = category_key(category_name.lower()))
-                items = bid_query.fetch()
-                for item in items:
-                    if wine.wine_id == item.wine.wine_id:
-                        item_to_modify = item.key.get()
+            bid_query = Bid.query(ancestor = category_key(category_name.lower()))
+            items = bid_query.fetch()
+            for item in items:
+                if wine.wine_id == item.wine.wine_id:
+                    item_to_modify = item.key.get()
+                    if item_to_modify.highest_bid < bid_price:
                         item_to_modify.highest_bid = bid_price
                         item_to_modify.put()
-                        break
+                    break
             bid = Bid(wine=wine,
                 highest_bid=highest_bid)
             bid_cart.bid =  bid
@@ -556,7 +555,7 @@ class ConfirmPage(webapp2.RequestHandler):
                             quantity_available=wine_entry_to_modify.quantity_available,
                             wine_id = cart.wine.wine_id)
                         bid.highest_bid = cart.wine.price
-                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                        bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
                         bid.put()
                         wines[0].key.delete()
                     else:
@@ -592,14 +591,14 @@ class ConfirmPage(webapp2.RequestHandler):
 class BidEnd(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
+        flag = 0
         category_list = ['red', 'white', 'rose', 'sparkling']
-	flag = 0
         for category_name in category_list:
             bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
             bids_in_db = bid_query.fetch()
             ending_bids = []
             for bids in bids_in_db:
-                if bids.datetime_end == datetime.datetime.now().replace(microsecond=0,second=0):
+                if bids.datetime_end == datetime.datetime.utcnow().replace(microsecond=0,second=0):
                     ending_bids.append(bids)
             for bid in ending_bids:
                 total_purchase = 0
@@ -609,7 +608,8 @@ class BidEnd(webapp2.RequestHandler):
                 bid_carts = bid_cart_query.fetch()
 
                 if len(bid_carts) == 0:
-                    bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                    bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                    bid.put()
                     #add more time ( how much ) to the date time end to continue the bid
                 else:
 
@@ -623,7 +623,7 @@ class BidEnd(webapp2.RequestHandler):
                         bid_winners[-1].quantity_to_bid = bid_winners[-1].quantity_to_bid - (total_purchase - bid.wine.quantity_available)
 
                     elif total_purchase < bid.wine.quantity_available:
-                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                        bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
                         bid.wine.quantity_available -= total_purchase
                         flag = 1
 
@@ -654,7 +654,8 @@ class BidEnd(webapp2.RequestHandler):
 
                         cart_purchased.quantity_to_buy=winner.quantity_to_bid
                         cart_purchased.put() #Confirmed Purchase
-                        print "******* Email: "+ winner.bidder.email + " Price "+ str(winner.bid_price)+" **********"
+                        #print "******* Email: "+ winner.bidder.email + " Price "+ str(winner.bid_price)+" **********"
+                        winner.key.delete()
                     if flag == 0:
                         bid.key.delete()
                     else:
