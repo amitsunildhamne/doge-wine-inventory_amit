@@ -605,7 +605,7 @@ class BidEnd(webapp2.RequestHandler):
                 total_purchase = 0
                 bid_winners = []
                 print bid.wine.wine_id
-                bid_cart_query = BidCart.query(ancestor = bid_cart_key(bid.wine.wine_id)).order(BidCart.bid_price)
+                bid_cart_query = BidCart.query(ancestor = bid_cart_key(bid.wine.wine_id)).order(-BidCart.bid_price)
                 bid_carts = bid_cart_query.fetch()
 
                 if len(bid_carts) == 0:
@@ -631,7 +631,7 @@ class BidEnd(webapp2.RequestHandler):
                         #put the data in each in the purchase db
                         user_mail = winner.bidder.email
                         subject = "Congrats!!"
-                        message = mail.EmailMessage(sender="hsmekhala.04@gmail.com", subject = subject)
+                        message = mail.EmailMessage(sender="amitsunildhamne@gmail.com", subject = subject)
 
                         if not mail.is_email_valid(user_mail):
                             self.response.out.write("Wrong email! Check again!")
@@ -639,7 +639,6 @@ class BidEnd(webapp2.RequestHandler):
                         message.to = user_mail
                         message.body = "Congrats! You won the bid"
                         message.send()
-			print "sent"
 
                         cart_name = self.request.get('cart_name',winner.bidder.identity)
                         cart_purchased = Cart(parent=purchase_key(cart_name))

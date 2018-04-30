@@ -12,10 +12,10 @@ indexes:
 - kind: Bid
   ancestor: yes
   properties:
-    - name: date
+    - name: datetime_started
       direction: desc
 - kind: BidCart
   ancestor: yes
   properties:
-    - name: date
+    - name: bid_price
       direction: desc
