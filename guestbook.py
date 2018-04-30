@@ -193,6 +193,9 @@ class BidPage(webapp2.RequestHandler):
         wines_to_bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
         error_sign_in = self.request.get('error_sign_in',False)
         response_recorded = self.request.get('response_recorded', False)
+        admin = False
+        if users.is_current_user_admin():
+            admin = True
         wines_to_bid = wines_to_bid_query.fetch()
         user = users.get_current_user()
         if user:
@@ -208,6 +211,7 @@ class BidPage(webapp2.RequestHandler):
         'error_sign_in': error_sign_in,
         'category_name': category_name,
         'bids': wines_to_bid,
+        'admin': admin,
         'url_linktext':url_linktext,
         'response_recorded': response_recorded,
         'error_sign_in':error_sign_in,
@@ -246,10 +250,10 @@ class BidPage(webapp2.RequestHandler):
             bid = Bid(wine=wine,
                 highest_bid=highest_bid)
             bid_cart.bid =  bid
-            bid.bidder = Author(identity=user.user_id(),email=user.email())
-            bid.bid_price = bid_price
-            bid.quantity_to_bid = quantity_to_bid
-            bid.put()
+            bid_cart.bidder = Author(identity=user.user_id(),email=user.email())
+            bid_cart.bid_price = bid_price
+            bid_cart.quantity_to_bid = quantity_to_bid
+            bid_cart.put()
             query_params= {'category_name':category_name,
             'response_recorded':True}
             self.redirect('/bidding?'+urllib.urlencode(query_params))
@@ -268,17 +272,14 @@ class BidPageDelete(webapp2.RequestHandler):
             url = users.create_login_url(self.request.uri)
             url_linktext = 'Login'
 
-        admin = 0
-        if users.is_current_user_admin():
-            admin = 1
         category_name = self.request.get('category_name', DEFAULT_CATEGORY_NAME).lower()
-        wines_bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
+        wines_bid_query = Bid.query(ancestor = bid_key(category_name)) #filter this
         wines_bid = wines_bid_query.fetch()
         for wines in wines_bid:
             if wines.wine.wine_id == self.request.get('wine_id'):
                 wines.key.delete()
                 break
-        query_params = {'category_name':category_name, 'admin' : admin}
+        query_params = {'category_name':category_name}
         self.redirect('/bidding?'+urllib.urlencode(query_params))
 
 class SearchAddPage(webapp2.RequestHandler):
@@ -554,7 +555,7 @@ class ConfirmPage(webapp2.RequestHandler):
                             quantity_available=wine_entry_to_modify.quantity_available,
                             wine_id = cart.wine.wine_id)
                         bid.highest_bid = cart.wine.price
-                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=5)).replace(microsecond=0,second=0)
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
                         bid.put()
                         wines[0].key.delete()
                     else:
@@ -595,18 +596,18 @@ class BidEnd(webapp2.RequestHandler):
             bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
             bids_in_db = bid_query.fetch()
             ending_bids = []
-
             for bids in bids_in_db:
-                if bids.datetime_end == datetime.datetime.now().replace(microsecond=0,second=0,minute=0):
+                if bids.datetime_end == datetime.datetime.now().replace(microsecond=0,second=0):
                     ending_bids.append(bids)
-
             for bid in ending_bids:
                 total_purchase = 0
                 bid_winners = []
+                print bid.wine.wine_id
                 bid_cart_query = BidCart.query(ancestor = bid_cart_key(bid.wine.wine_id)).order(BidCart.bid_price)
                 bid_carts = bid_cart_query.fetch()
-                if len(bid_carts) == 0 :
-                    bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=5)).replace(microsecond=0,second=0)
+
+                if len(bid_carts) == 0:
+                    bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
                     #add more time ( how much ) to the date time end to continue the bid
                 else:
                     for bid_cart in bid_carts:
@@ -619,15 +620,15 @@ class BidEnd(webapp2.RequestHandler):
                         bid_winners[-1].quantity_to_bid = bid_winners[-1].quantity_to_bid - (total_purchase - bid.wine.quantity_available)
 
                     elif total_purchase < bid.wine.quantity_available:
-                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=5)).replace(microsecond=0,second=0)
+                        bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
                         bid.wine.quantity_available -= total_purchase
                         flag = 1
 
                     for winner in bid_winners:
                         #put the data in each in the purchase db
-                        user_mail = winner.bidder.email()
+                        user_mail = winner.bidder.email
                         subject = "Congrats!!"
-                        message = mail.EmailMessage(sender="info@appspot.gserviceaccount.com", subject = subject)
+                        message = mail.EmailMessage(sender="amitsunildhamne@gmail.com", subject = subject)
 
                         if not mail.is_email_valid(userMail):
                             self.response.out.write("Wrong email! Check again!")
