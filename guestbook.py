@@ -9,6 +9,7 @@ import datetime
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
+from google.appengine.api import mail
 
 import jinja2
 import webapp2
@@ -592,6 +593,7 @@ class BidEnd(webapp2.RequestHandler):
     def get(self):
         user = users.get_current_user()
         category_list = ['red', 'white', 'rose', 'sparkling']
+	flag = 0
         for category_name in category_list:
             bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
             bids_in_db = bid_query.fetch()
@@ -610,6 +612,7 @@ class BidEnd(webapp2.RequestHandler):
                     bid.datetime_end = (datetime.datetime.now() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
                     #add more time ( how much ) to the date time end to continue the bid
                 else:
+
                     for bid_cart in bid_carts:
                         if total_purchase <= bid.wine.quantity_available:
                             total_purchase += bid_cart.quantity_to_bid
@@ -628,18 +631,19 @@ class BidEnd(webapp2.RequestHandler):
                         #put the data in each in the purchase db
                         user_mail = winner.bidder.email
                         subject = "Congrats!!"
-                        message = mail.EmailMessage(sender="amitsunildhamne@gmail.com", subject = subject)
+                        message = mail.EmailMessage(sender="hsmekhala.04@gmail.com", subject = subject)
 
-                        if not mail.is_email_valid(userMail):
+                        if not mail.is_email_valid(user_mail):
                             self.response.out.write("Wrong email! Check again!")
 
                         message.to = user_mail
                         message.body = "Congrats! You won the bid"
                         message.send()
+			print "sent"
 
-                        cart_name = self.request.get('cart_name',winner.bidder.user_id())
+                        cart_name = self.request.get('cart_name',winner.bidder.identity)
                         cart_purchased = Cart(parent=purchase_key(cart_name))
-                        cart_purchased.author = Author(identity=winner.bidder.user_id(),email=winner.bidder.email())
+                        cart_purchased.author = Author(identity=winner.bidder.identity,email=winner.bidder.email)
                         cart_purchased.wine = Wine( country=winner.bid.wine.country,
                         region= winner.bid.wine.region,
                         winery= winner.bid.wine.winery,
@@ -651,7 +655,7 @@ class BidEnd(webapp2.RequestHandler):
 
                         cart_purchased.quantity_to_buy=winner.quantity_to_bid
                         cart_purchased.put() #Confirmed Purchase
-                        print "******* Email: "+ winner.bidder.email() + " Price "+ winner.bid_price+" **********"
+                        print "******* Email: "+ winner.bidder.email + " Price "+ str(winner.bid_price)+" **********"
                     if flag == 0:
                         bid.key.delete()
                     else:
