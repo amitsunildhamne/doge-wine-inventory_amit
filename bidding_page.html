@@ -35,8 +35,8 @@
   <br/>
   {% for bid in bids %}
   <blockquote>
-     Winery: {{ bid.wine.winery }}; variety: {{ bid.wine.variety }}; Year: {{ bid.wine.year }}; Region: {{ bid.wine.region }}; Country: {{ bid.wine.country }}; Maximum Bid Price : ${{bid.highest_bid}}; Minimum Bid Price: {{ bid.wine.price }} <br/>
-     Started on {{ bid.datetime_started }}. Ends on {{ bid.datetime_end }} <br/>
+     Winery: {{ bid.wine.winery }}; variety: {{ bid.wine.variety }}; Year: {{ bid.wine.year }}; Region: {{ bid.wine.region }}; Country: {{ bid.wine.country }}; Current Highest Bid Price : ${{bid.highest_bid}}; Minimum Bid Price: {{ bid.wine.price }} <br/>
+     Started on {{ bid.datetime_started }} UTC. Ends on {{ bid.datetime_end }} UTC. Time Left: {{ bid.datetime_end - currentTime }} <br/>
      <br/>
     <form action="/bidding?cart_name={{ cart_name }}&category_name={{ category_name }}" method="post">
       Quantity (Allowed to bid for maximum {{ bid.wine.quantity_available }})

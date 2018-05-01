@@ -19,7 +19,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 # [END imports]
-
+response_recorded = 0
 DEFAULT_CATEGORY_NAME = 'red' #you have to change this
 DEFAULT_CART_NAME = 'default_cart' #existing cart
 # We set a parent key on the 'Greetings' to ensure that they are all
@@ -190,10 +190,11 @@ class DisplayPage(webapp2.RequestHandler): #displays individual category page
 class BidPage(webapp2.RequestHandler):
 
     def get(self):
+        global response_recorded
         category_name = self.request.get('category_name', DEFAULT_CATEGORY_NAME).lower()
         wines_to_bid_query = Bid.query(ancestor = bid_key(category_name)).order(-Bid.datetime_started)
         error_sign_in = self.request.get('error_sign_in',False)
-        response_recorded = self.request.get('response_recorded', False)
+        #response_recorded = self.request.get('response_recorded', False)
         admin = False
         if users.is_current_user_admin():
             admin = True
@@ -209,6 +210,7 @@ class BidPage(webapp2.RequestHandler):
         #Add Bidding Cart
         template_values = {
         'user': user,
+        'currentTime': datetime.datetime.utcnow(),
         'error_sign_in': error_sign_in,
         'category_name': category_name,
         'bids': wines_to_bid,
@@ -220,8 +222,9 @@ class BidPage(webapp2.RequestHandler):
         }
         template = JINJA_ENVIRONMENT.get_template('bidding_page.html')
         self.response.write(template.render(template_values))
-
+        response_recorded = False
     def post(self):
+        global response_recorded
         user = users.get_current_user()
         category_name = self.request.get('category_name',DEFAULT_CATEGORY_NAME).lower()
         if user:
@@ -254,8 +257,8 @@ class BidPage(webapp2.RequestHandler):
             bid_cart.bid_price = bid_price
             bid_cart.quantity_to_bid = quantity_to_bid
             bid_cart.put()
-            query_params= {'category_name':category_name,
-            'response_recorded':True}
+            response_recorded = True
+            query_params= {'category_name':category_name}
             self.redirect('/bidding?'+urllib.urlencode(query_params))
         else:
             query_params ={'error_sign_in':True,
@@ -555,7 +558,7 @@ class ConfirmPage(webapp2.RequestHandler):
                             quantity_available=wine_entry_to_modify.quantity_available,
                             wine_id = cart.wine.wine_id)
                         bid.highest_bid = cart.wine.price
-                        bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                        bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0, minute=0)
                         bid.put()
                         wines[0].key.delete()
                     else:
@@ -608,7 +611,7 @@ class BidEnd(webapp2.RequestHandler):
                 bid_carts = bid_cart_query.fetch()
 
                 if len(bid_carts) == 0:
-                    bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                    bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0, minute=0)
                     bid.put()
                     #add more time ( how much ) to the date time end to continue the bid
                 else:
@@ -623,7 +626,7 @@ class BidEnd(webapp2.RequestHandler):
                         bid_winners[-1].quantity_to_bid = bid_winners[-1].quantity_to_bid - (total_purchase - bid.wine.quantity_available)
 
                     elif total_purchase < bid.wine.quantity_available:
-                        bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(minutes=2)).replace(microsecond=0,second=0)
+                        bid.datetime_end = (datetime.datetime.utcnow() + datetime.timedelta(hours=4)).replace(microsecond=0,second=0,minute=0)
                         bid.wine.quantity_available -= total_purchase
                         flag = 1
 
@@ -636,13 +639,10 @@ class BidEnd(webapp2.RequestHandler):
                         if not mail.is_email_valid(user_mail):
                             self.response.out.write("Wrong email! Check again!")
 
-                        message.to = user_mail
-                        message.body = "Congrats! You won the bid"
-                        message.send()
-
                         cart_name = self.request.get('cart_name',winner.bidder.identity)
                         cart_purchased = Cart(parent=purchase_key(cart_name))
                         cart_purchased.author = Author(identity=winner.bidder.identity,email=winner.bidder.email)
+                        cart_purchased.quantity_to_buy = winner.quantity_to_bid
                         cart_purchased.wine = Wine( country=winner.bid.wine.country,
                         region= winner.bid.wine.region,
                         winery= winner.bid.wine.winery,
@@ -651,6 +651,10 @@ class BidEnd(webapp2.RequestHandler):
                         year= winner.bid.wine.year,
                         category=winner.bid.wine.category,
                         wine_id = winner.bid.wine.wine_id)
+
+                        message.to = user_mail
+                        message.body = "Congrats! You won the bid. You have purchased the  wine varirty "+ "'"+winner.bid.wine.variety+"'"+" from "+"'"+winner.bid.wine.winery+"'"+". Total cost is "+"$ "+str(winner.quantity_to_bid*winner.bid_price)+" at "+str(bid.datetime_end)
+                        message.send()
 
                         cart_purchased.quantity_to_buy=winner.quantity_to_bid
                         cart_purchased.put() #Confirmed Purchase
